@@ -3,35 +3,39 @@ var app = express();
 var fs = require("fs");
 
 var bodyParser = require('body-parser');
-var multer  = require('multer');
+var multer = require('multer');
+var upload = multer({ dest: '/tmp/'});
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(multer({ dest: '/tmp/'}));
 
 app.get('/index.htm', function (req, res) {
    res.sendFile( __dirname + "/" + "index.htm" );
-})
+});
 
-app.post('/file_upload', function (req, res) {
-   console.log(req.files.file.name);
-   console.log(req.files.file.path);
-   console.log(req.files.file.type);
-   var file = __dirname + "/" + req.files.file.name;
+app.post('/file_upload', upload.single('file'), function (req, res) {
+   console.log(req.file.name);
+   console.log(req.file.path);
+   console.log(req.file.type);
+
+   var file = __dirname + "/" + req.file.originalname;
+
+   console.log("writing file called: ", file);
    
-   fs.readFile( req.files.file.path, function (err, data) {
+   fs.readFile( req.file.path, function (err, data) {
       fs.writeFile(file, data, function (err) {
          if( err ){
-            console.log( err );
-            }else{
+            console.log("error", err );
+            } else {
                response = {
                   message:'File uploaded successfully',
-                  filename:req.files.file.name
+                  filename: file
                };
             }
          console.log( response );
          res.end( JSON.stringify( response ) );
       });
+
    });
 })
 
